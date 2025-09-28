@@ -1,79 +1,93 @@
 package test;
 
 import java.time.Duration;
-import org.openqa.selenium.*;
-import org.openqa.selenium.chrome.*;
-import org.openqa.selenium.support.ui.*;
 
-public class Demo {
-	public static void main(String[] args) throws InterruptedException {
-			String deliveryLocation = "Hyderabad";
-			String url = "https://www.floweraura.com/";
-			String searchInput = "roses";
-			String sortByOpton = "Low to High"; 
-			String deliveryCity = "Shimogha";
-		
-		ChromeOptions options = new ChromeOptions();
-		options.addArguments("--disable-notifications");
-		WebDriver driver = new ChromeDriver(options);
-		driver.manage().window().maximize();
-		driver.get(url);
-		driver.findElement(By.id("user-selected-city-input")).click();
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+import org.testng.Assert;
+import org.testng.annotations.*;
+
+import pages.HomePage;
+
+public class Demo extends Base {
+	public WebDriver driver;
+	HomePage homepage;
+	String deliveryLocation = "Hyderabad";
+	String searchInput = "roses";
+	String sortByValue = "Low to High";
+	String deliveryCity = "Shimogha";
+	int itemNum = 2;
+	String occation = "Congratulations";
+	String pageTitle = "FlowerAura #1 Florist for Flower Delivery, Cakes & Gifts in India";
+
+	@BeforeMethod
+	public void setUp() {
+		driver = launchBrowser();
+	}
+
+	@Test
+	public void TC_001_VerifyThePageTitle() {
+		Assert.assertEquals(driver.getTitle(), pageTitle, "Page Title is not matched");
+	}
+
+	@Test
+	public void TC_002_VerifyDeliveryLocationUpdate() {
+		homepage = new HomePage(driver);
+		homepage.clickOnCitySelectionPopUp();
 		WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
 		WebElement enterLocationField = wait
 				.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".selectCityPincode")));
 		enterLocationField.sendKeys(deliveryLocation);
-		WebElement cityOption = driver
-				.findElement(By.xpath("(//input[@class='selectCityPincode']//following::span)[1]"));
-		cityOption.click();
+		homepage.clickOnCityOption();
+		Assert.assertEquals(homepage.getDeliveryLocation(), deliveryLocation,
+				"Delivery location not updated as expected");
+
+	}
+
+	@Test
+	public void TC_003_E2EScenario() throws InterruptedException {
+		homepage = new HomePage(driver);
+		homepage.clickOnCitySelectionPopUp();
+		WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+		WebElement enterLocationField = wait
+				.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".selectCityPincode")));
+		enterLocationField.sendKeys(deliveryLocation);
+		homepage.clickOnCityOption();
 		Thread.sleep(2000);
 		WebElement searchContainer = wait.until(ExpectedConditions
 				.refreshed(ExpectedConditions.elementToBeClickable(By.xpath("//div[@class='search-container']//div"))));
 		searchContainer.click();
-		driver.findElement(By.id("search_block")).sendKeys(searchInput);
-		Thread.sleep(200);
-		driver.findElement(By.id("edit_submit")).click();
+		homepage.enterInputInSerachField(searchInput);
 		Thread.sleep(2000);
-		WebElement sortByDropdownElement = driver.findElement(By.id("st-sort-web"));
-		Select sortByDropdown = new Select(sortByDropdownElement);
-		Thread.sleep(200);
-		sortByDropdown.selectByContainsVisibleText(sortByOpton);
+		homepage.clickOnSearchIcon();
 		Thread.sleep(2000);
-		driver.findElement(By.xpath("(//div[@class='st-col-md-4'])[3]")).click();
-		Thread.sleep(3000);
-		driver.findElement(By.partialLinkText("BUY NOW")).click();
-		Thread.sleep(3000);
-		driver.findElement(By.xpath("//*[text()='Continue']")).click();
-		Thread.sleep(3000);
-		driver.findElement(By.xpath("//div[@class='totalCheckout']//span")).click();
-		Thread.sleep(1000);
-		driver.findElement(By.xpath("//*[@class='closeUserLoginModal']")).click();
-		Thread.sleep(1000);
-		driver.findElement(By.xpath("//*[@class='bgSpriteMenu']")).click();
-		Thread.sleep(1000);
-		driver.findElement(By.xpath("//*[text()='Contact Us']")).click();
-		Thread.sleep(1000);
-		String contactDetails = driver.findElement(By.xpath("//div[@class='callUs']//span")).getText();
-		System.out.println("Contact Details:: "+contactDetails);
-		Thread.sleep(1000);
-		driver.findElement(By.xpath("//*[@class='bgSpriteMenu']")).click();
-		Thread.sleep(1000);
-		driver.findElement(By.xpath("//*[text()='Gift Finder']")).click();
-		Thread.sleep(1000);
-		WebElement cityNameField = driver.findElement(By.id("typeCityName"));
-		cityNameField.clear();
-		cityNameField.sendKeys(deliveryCity);
-		Thread.sleep(1000);
-		driver.findElement(By.xpath("//*[text()='Today']")).click();
-		Thread.sleep(1000);
-		driver.findElement(By.id("occashionList")).click();
-		Thread.sleep(1000);
-		driver.findElement(By.xpath("//li[text()='Congratulations']")).click();
-		Thread.sleep(1000);
-		driver.findElement(By.xpath("//*[@class='ggSubmitBtn']//button")).click();
-		Thread.sleep(5000);
-		driver.quit();
+		homepage.selectSortByOption(sortByValue);
+		//Thread.sleep(2000);
+		homepage.clickItem(itemNum);
+		homepage.clickOnBuyNowOption();
+		homepage.clickOnContinueOption();
+		homepage.clickOnCheckoutOption();
+		homepage.clickOnCloseIcon();
+		homepage.clickOnMoreOptionsIcon();
+		homepage.clickOnContactUsOption();
+		System.out.println("Contact Details:: " + homepage.getContactdetils());
+		homepage.clickOnMoreOptionsIcon();
+		homepage.clickOnGiftFinder();
+		homepage.enterCityName(deliveryCity);
+		homepage.clickOnTodayOption();
+		homepage.clickOnOccashionListOption();
+		homepage.selectOccationType(occation);
+		homepage.clickOnSubmitButton();
 
+	}
+
+	@AfterMethod
+	public void tearDown() {
+		if (driver != null)
+			quitBrowser(driver);
 	}
 
 }
